@@ -43,7 +43,7 @@ st.markdown("""
     .main-header {
         font-size: 3.5rem;
         font-weight: 800;
-        color: #1e3a8a;
+        color: #000000;
         text-align: center;
         margin-bottom: 0.5rem;
         animation: fadeInDown 1s ease-in;
@@ -52,11 +52,11 @@ st.markdown("""
     /* Sub Header */
     .sub-header {
         font-size: 1.3rem;
-        color: #4b5563;
+        color: #000000;
         text-align: center;
         margin-bottom: 2rem;
         animation: fadeInUp 1s ease-in;
-        font-weight: 500;
+        font-weight: 700;
     }
     
     /* Animations */
@@ -128,7 +128,8 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #28a745;
-        color: #155724;
+        color: #000000;
+        font-weight: 700;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
@@ -139,7 +140,8 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #ffc107;
-        color: #856404;
+        color: #000000;
+        font-weight: 700;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
@@ -150,7 +152,8 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #dc3545;
-        color: #721c24;
+        color: #000000;
+        font-weight: 700;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
@@ -161,7 +164,8 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #17a2b8;
-        color: #0c5460;
+        color: #000000;
+        font-weight: 700;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
@@ -174,7 +178,7 @@ st.markdown("""
         border-radius: 2rem;
         border: none;
         font-size: 1.1rem;
-        font-weight: bold;
+        font-weight: 800;
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
@@ -188,8 +192,8 @@ st.markdown("""
     
     /* Headers */
     h1, h2, h3 {
-        color: #1e3a8a;
-        font-weight: 700;
+        color: #000000;
+        font-weight: 800;
     }
     
     /* Metrics */
@@ -208,14 +212,14 @@ st.markdown("""
     }
     
     .stMetric label {
-        color: #3b82f6;
-        font-weight: 600;
+        color: #000000;
+        font-weight: 700;
         font-size: 0.9rem;
     }
     
     .stMetric value {
-        color: #1e3a8a;
-        font-weight: 700;
+        color: #000000;
+        font-weight: 800;
         font-size: 1.5rem;
     }
     
@@ -239,7 +243,7 @@ st.markdown("""
         border: none;
         border-radius: 2rem;
         padding: 0.75rem 1.5rem;
-        font-weight: bold;
+        font-weight: 800;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     }
@@ -261,22 +265,23 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] {
         background: #f3f4f6;
         border-radius: 0.5rem;
-        color: #374151;
-        font-weight: 600;
+        color: #000000;
+        font-weight: 700;
         padding: 0.75rem 1.5rem;
     }
     
     .stTabs [aria-selected="true"] {
         background: #3b82f6;
         color: #ffffff;
+        font-weight: 800;
     }
     
     /* Expander */
     .streamlit-expanderHeader {
         background: rgba(255, 255, 255, 0.95);
         border-radius: 0.5rem;
-        color: #667eea;
-        font-weight: 600;
+        color: #000000;
+        font-weight: 700;
     }
     
     /* Progress Bar */
@@ -308,9 +313,9 @@ st.markdown("""
     /* Footer */
     .footer {
         text-align: center;
-        color: #4b5563;
+        color: #000000;
         padding: 2rem;
-        font-weight: 500;
+        font-weight: 700;
     }
     
     /* Welcome Message */
@@ -319,7 +324,7 @@ st.markdown("""
         padding: 2rem;
         border-radius: 1rem;
         border-left: 5px solid #3b82f6;
-        color: #1e3a8a;
+        color: #000000;
         text-align: center;
         margin: 2rem 0;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -327,12 +332,14 @@ st.markdown("""
     }
     
     .welcome-message h2 {
-        color: #1e3a8a;
+        color: #000000;
+        font-weight: 800;
         margin-bottom: 1rem;
     }
     
     .welcome-message p {
-        color: #4b5563;
+        color: #000000;
+        font-weight: 600;
         font-size: 1.1rem;
     }
 </style>
@@ -603,11 +610,14 @@ def display_results(result):
                     with cols[idx % 3]:
                         severity = feature.get("severity", "unknown")
                         severity_color = "#dc3545" if severity == "high" else "#ffc107" if severity == "medium" else "#28a745"
+                        feature_name = feature.get('name', 'Unknown')
+                        feature_value = feature.get('value', 0.0)
+                        feature_expected = feature.get('expected_range', 'N/A')
                         st.markdown(f"""
                         <div style='background: rgba(255,255,255,0.95); padding: 1rem; border-radius: 0.5rem; border-left: 4px solid {severity_color}; margin: 0.5rem 0;'>
-                            <strong>{feature['name']}</strong><br/>
-                            <small>Value: {feature['value']:.4f}</small><br/>
-                            <small>Expected: {feature['expected_range']}</small><br/>
+                            <strong>{feature_name}</strong><br/>
+                            <small>Value: {feature_value:.4f}</small><br/>
+                            <small>Expected: {feature_expected}</small><br/>
                             <span style='color: {severity_color}; font-weight: bold;'>{severity.upper()}</span>
                         </div>
                         """, unsafe_allow_html=True)
