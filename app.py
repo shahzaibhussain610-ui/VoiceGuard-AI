@@ -659,10 +659,10 @@ def display_results(result):
                         feature_expected = feature.get('expected_range', 'N/A')
                         st.markdown(f"""
                         <div style='background: rgba(255,255,255,0.95); padding: 1rem; border-radius: 0.5rem; border-left: 4px solid {severity_color}; margin: 0.5rem 0;'>
-                            <strong>{feature_name}</strong><br/>
-                            <small>Value: {feature_value:.4f}</small><br/>
-                            <small>Expected: {feature_expected}</small><br/>
-                            <span style='color: {severity_color}; font-weight: bold;'>{severity.upper()}</span>
+                            <strong style='color: #000000; font-weight: 700;'>{feature_name}</strong><br/>
+                            <small style='color: #000000; font-weight: 600;'>Value: {feature_value:.4f}</small><br/>
+                            <small style='color: #000000; font-weight: 600;'>Expected: {feature_expected}</small><br/>
+                            <span style='color: {severity_color}; font-weight: 800; font-size: 0.9rem;'>{severity.upper()}</span>
                         </div>
                         """, unsafe_allow_html=True)
         
