@@ -34,16 +34,16 @@ st.set_page_config(
 # Custom CSS for creative and friendly UI
 st.markdown("""
 <style>
-    /* Main Background - Light and Clean */
+    /* Main Background - Dark Theme */
     .stApp {
-        background: #f8f9fa;
+        background: #000000;
     }
     
     /* Main Header with Animation */
     .main-header {
         font-size: 3.5rem;
         font-weight: 800;
-        color: #000000;
+        color: #ffffff;
         text-align: center;
         margin-bottom: 0.5rem;
         animation: fadeInDown 1s ease-in;
@@ -52,7 +52,7 @@ st.markdown("""
     /* Sub Header */
     .sub-header {
         font-size: 1.3rem;
-        color: #000000;
+        color: #ffffff;
         text-align: center;
         margin-bottom: 2rem;
         animation: fadeInUp 1s ease-in;
@@ -107,12 +107,12 @@ st.markdown("""
     
     /* Card Styles */
     .metric-card {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(30, 30, 30, 0.95);
         padding: 1.5rem;
         border-radius: 1rem;
         margin: 0.5rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border: 2px solid #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        border: 2px solid #333333;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         animation: slideIn 0.5s ease-in;
     }
@@ -124,49 +124,49 @@ st.markdown("""
     
     /* Success Box */
     .success-box {
-        background: #d4edda;
+        background: rgba(40, 167, 69, 0.2);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #28a745;
-        color: #000000;
+        color: #ffffff;
         font-weight: 700;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Warning Box */
     .warning-box {
-        background: #fff3cd;
+        background: rgba(255, 193, 7, 0.2);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #ffc107;
-        color: #000000;
+        color: #ffffff;
         font-weight: 700;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Error Box */
     .error-box {
-        background: #f8d7da;
+        background: rgba(220, 53, 69, 0.2);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #dc3545;
-        color: #000000;
+        color: #ffffff;
         font-weight: 700;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Info Box */
     .info-box {
-        background: #d1ecf1;
+        background: rgba(23, 162, 184, 0.2);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #17a2b8;
-        color: #000000;
+        color: #ffffff;
         font-weight: 700;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
         animation: fadeInUp 0.6s ease-in;
     }
     
@@ -192,41 +192,41 @@ st.markdown("""
     
     /* Headers */
     h1, h2, h3 {
-        color: #000000;
+        color: #ffffff;
         font-weight: 800;
     }
     
     /* Metrics */
     .stMetric {
-        background: #ffffff !important;
+        background: rgba(30, 30, 30, 0.95) !important;
         padding: 1.5rem !important;
         border-radius: 1rem !important;
-        border: 2px solid #e5e7eb !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        border: 2px solid #333333 !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5) !important;
         transition: all 0.3s ease !important;
     }
     
     .stMetric:hover {
         transform: translateY(-3px) !important;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7) !important;
     }
     
     .stMetric label {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 0.9rem !important;
         opacity: 1 !important;
     }
     
     .stMetric [data-testid="stMetricValue"] {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
         font-size: 1.5rem !important;
         opacity: 1 !important;
     }
     
     .stMetric [data-testid="stMetricLabel"] {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 0.9rem !important;
         opacity: 1 !important;
@@ -234,7 +234,7 @@ st.markdown("""
     
     /* Additional targeting for Streamlit metrics - more aggressive */
     div[data-testid="stMetricValue"] {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
         font-size: 1.5rem !important;
         opacity: 1 !important;
@@ -242,7 +242,7 @@ st.markdown("""
     }
     
     div[data-testid="stMetricLabel"] {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 0.9rem !important;
         opacity: 1 !important;
@@ -251,7 +251,7 @@ st.markdown("""
     
     /* Target all metric elements */
     .stMetric > div > div > div > div {
-        color: #000000 !important;
+        color: #ffffff !important;
         font-weight: 800 !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -264,17 +264,17 @@ st.markdown("""
     
     [data-testid="metric-container"] > div {
         opacity: 1 !important;
-        color: #000000 !important;
+        color: #ffffff !important;
     }
     
     /* Sidebar Styling */
     .css-1d391kg {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(30, 30, 30, 0.95);
     }
     
     /* File Uploader */
     .stFileUploader {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(30, 30, 30, 0.95);
         padding: 2rem;
         border-radius: 1rem;
         border: 2px dashed #667eea;
@@ -300,16 +300,16 @@ st.markdown("""
     
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        background: #ffffff;
+        background: rgba(30, 30, 30, 0.95);
         border-radius: 1rem;
         padding: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
     
     .stTabs [data-baseweb="tab"] {
-        background: #f3f4f6;
+        background: #333333;
         border-radius: 0.5rem;
-        color: #000000;
+        color: #ffffff;
         font-weight: 700;
         padding: 0.75rem 1.5rem;
     }
@@ -322,9 +322,9 @@ st.markdown("""
     
     /* Expander */
     .streamlit-expanderHeader {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(30, 30, 30, 0.95);
         border-radius: 0.5rem;
-        color: #000000;
+        color: #ffffff;
         font-weight: 700;
     }
     
@@ -357,32 +357,32 @@ st.markdown("""
     /* Footer */
     .footer {
         text-align: center;
-        color: #000000;
+        color: #ffffff;
         padding: 2rem;
         font-weight: 700;
     }
     
     /* Welcome Message */
     .welcome-message {
-        background: #ffffff;
+        background: rgba(30, 30, 30, 0.95);
         padding: 2rem;
         border-radius: 1rem;
         border-left: 5px solid #3b82f6;
-        color: #000000;
+        color: #ffffff;
         text-align: center;
         margin: 2rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
         animation: fadeInUp 1s ease-in;
     }
     
     .welcome-message h2 {
-        color: #000000;
+        color: #ffffff;
         font-weight: 800;
         margin-bottom: 1rem;
     }
     
     .welcome-message p {
-        color: #000000;
+        color: #ffffff;
         font-weight: 600;
         font-size: 1.1rem;
     }
