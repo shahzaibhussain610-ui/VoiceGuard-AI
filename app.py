@@ -34,32 +34,34 @@ st.set_page_config(
 # Custom CSS for creative and friendly UI
 st.markdown("""
 <style>
-    /* Main Background - Light and Clean */
+    /* Main Background with Gradient */
     .stApp {
-        background: #f5f7fa;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     
     /* Main Header with Animation */
     .main-header {
         font-size: 3.5rem;
         font-weight: 800;
-        background: linear-gradient(45deg, #1e3a8a, #3b82f6);
+        background: linear-gradient(45deg, #ffffff, #f0f0f0);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         text-align: center;
         margin-bottom: 0.5rem;
         animation: fadeInDown 1s ease-in;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     
     /* Sub Header */
     .sub-header {
         font-size: 1.3rem;
-        color: #1e40af;
+        color: #ffffff;
         text-align: center;
         margin-bottom: 2rem;
         animation: fadeInUp 1s ease-in;
         font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
     
     /* Animations */
@@ -127,51 +129,51 @@ st.markdown("""
     
     /* Success Box */
     .success-box {
-        background: #d4edda;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #28a745;
-        color: #155724;
+        color: #ffffff;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Warning Box */
     .warning-box {
-        background: #fff3cd;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #ffc107;
-        color: #856404;
+        color: #ffffff;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Error Box */
     .error-box {
-        background: #f8d7da;
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #dc3545;
-        color: #721c24;
+        color: #ffffff;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Info Box */
     .info-box {
-        background: #d1ecf1;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         padding: 1.5rem;
         border-radius: 1rem;
         border-left: 5px solid #17a2b8;
-        color: #0c5460;
+        color: #ffffff;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         animation: fadeInUp 0.6s ease-in;
     }
     
     /* Analyze Button */
     .analyze-button {
-        background: #3b82f6;
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 1rem 2rem;
         border-radius: 2rem;
@@ -180,27 +182,26 @@ st.markdown("""
         font-weight: bold;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
     
     .analyze-button:hover {
-        background: #2563eb;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
     }
     
     /* Headers */
     h1, h2, h3 {
-        color: #1e3a8a;
+        color: #ffffff;
         font-weight: 700;
     }
     
     /* Metrics */
     .stMetric {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.95);
         padding: 1.5rem;
         border-radius: 1rem;
-        border: 2px solid #e5e7eb;
+        border: 2px solid #ffffff;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
     }
@@ -211,13 +212,13 @@ st.markdown("""
     }
     
     .stMetric label {
-        color: #3b82f6;
+        color: #667eea;
         font-weight: 600;
         font-size: 0.9rem;
     }
     
     .stMetric value {
-        color: #1e3a8a;
+        color: #764ba2;
         font-weight: 700;
         font-size: 1.5rem;
     }
@@ -237,40 +238,38 @@ st.markdown("""
     
     /* Buttons */
     .stButton>button {
-        background: #3b82f6;
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
         border-radius: 2rem;
         padding: 0.75rem 1.5rem;
         font-weight: bold;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
     
     .stButton>button:hover {
-        background: #2563eb;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
     }
     
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.2);
         border-radius: 1rem;
         padding: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     .stTabs [data-baseweb="tab"] {
-        background: #f3f4f6;
+        background: rgba(255, 255, 255, 0.3);
         border-radius: 0.5rem;
-        color: #374151;
+        color: #ffffff;
         font-weight: 600;
         padding: 0.75rem 1.5rem;
     }
     
     .stTabs [aria-selected="true"] {
-        background: #3b82f6;
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
         color: #ffffff;
     }
     
@@ -311,31 +310,31 @@ st.markdown("""
     /* Footer */
     .footer {
         text-align: center;
-        color: #4b5563;
+        color: #ffffff;
         padding: 2rem;
         font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
     }
     
     /* Welcome Message */
     .welcome-message {
-        background: #ffffff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 2rem;
         border-radius: 1rem;
-        border-left: 5px solid #3b82f6;
-        color: #1e3a8a;
+        color: white;
         text-align: center;
         margin: 2rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         animation: fadeInUp 1s ease-in;
     }
     
     .welcome-message h2 {
-        color: #1e3a8a;
+        color: white;
         margin-bottom: 1rem;
     }
     
     .welcome-message p {
-        color: #4b5563;
+        color: rgba(255, 255, 255, 0.9);
         font-size: 1.1rem;
     }
 </style>
