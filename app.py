@@ -198,35 +198,73 @@ st.markdown("""
     
     /* Metrics */
     .stMetric {
-        background: #ffffff;
-        padding: 1.5rem;
-        border-radius: 1rem;
-        border: 2px solid #e5e7eb;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
+        background: #ffffff !important;
+        padding: 1.5rem !important;
+        border-radius: 1rem !important;
+        border: 2px solid #e5e7eb !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.3s ease !important;
     }
     
     .stMetric:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-3px) !important;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
     }
     
     .stMetric label {
         color: #000000 !important;
         font-weight: 700 !important;
         font-size: 0.9rem !important;
+        opacity: 1 !important;
     }
     
     .stMetric [data-testid="stMetricValue"] {
         color: #000000 !important;
         font-weight: 800 !important;
         font-size: 1.5rem !important;
+        opacity: 1 !important;
     }
     
     .stMetric [data-testid="stMetricLabel"] {
         color: #000000 !important;
         font-weight: 700 !important;
         font-size: 0.9rem !important;
+        opacity: 1 !important;
+    }
+    
+    /* Additional targeting for Streamlit metrics - more aggressive */
+    div[data-testid="stMetricValue"] {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        font-size: 1.5rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    div[data-testid="stMetricLabel"] {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Target all metric elements */
+    .stMetric > div > div > div > div {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Target metric value specifically */
+    [data-testid="metric-container"] {
+        opacity: 1 !important;
+    }
+    
+    [data-testid="metric-container"] > div {
+        opacity: 1 !important;
+        color: #000000 !important;
     }
     
     /* Sidebar Styling */
@@ -758,11 +796,31 @@ def main():
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("⏱️ Duration", Helper.format_duration(duration))
-                    st.metric("🔊 Sample Rate", f"{sr} Hz")
+                    st.markdown(f"""
+                    <div class="metric-card" style="text-align: center;">
+                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">⏱️ Duration</h3>
+                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">{Helper.format_duration(duration)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="metric-card" style="text-align: center;">
+                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">🔊 Sample Rate</h3>
+                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">{sr} Hz</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                 with col2:
-                    st.metric("📊 Samples", f"{len(audio):,}")
-                    st.metric("🎧 Channels", "1 (Mono)")
+                    st.markdown(f"""
+                    <div class="metric-card" style="text-align: center;">
+                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">📊 Samples</h3>
+                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">{len(audio):,}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="metric-card" style="text-align: center;">
+                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">🎧 Channels</h3>
+                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">1 (Mono)</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 # Visualize
                 st.markdown("### 🎨 Audio Visualization")
