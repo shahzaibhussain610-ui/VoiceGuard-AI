@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Output directories
+output/
+test_output/
+test_reports/
+
+# Models
+models/
+test_models/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+
+# Temporary files
+temp_*
+*.tmp
+
+# Logs
+*.log
