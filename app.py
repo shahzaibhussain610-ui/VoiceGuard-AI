@@ -212,15 +212,21 @@ st.markdown("""
     }
     
     .stMetric label {
-        color: #000000;
-        font-weight: 700;
-        font-size: 0.9rem;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
     }
     
-    .stMetric value {
-        color: #000000;
-        font-weight: 800;
-        font-size: 1.5rem;
+    .stMetric [data-testid="stMetricValue"] {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .stMetric [data-testid="stMetricLabel"] {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
     }
     
     /* Sidebar Styling */
