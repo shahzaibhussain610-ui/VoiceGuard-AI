@@ -402,7 +402,7 @@ def initialize_session_state():
         st.session_state.sample_rate = None
 
 
-def load_pipeline(config_type="default"):
+def load_pipeline(config_type="default", use_wavlm=False, wavlm_path="models/pretrained/wavlm_base_plus"):
     """Load and initialize the VoiceGuard pipeline"""
     if st.session_state.pipeline is None:
         with st.spinner("🚀 Initializing VoiceGuard AI Pipeline..."):
@@ -412,6 +412,12 @@ def load_pipeline(config_type="default"):
                 config = get_accurate_config()
             else:
                 config = get_default_config()
+            
+            # Check if WavLM model exists
+            wavlm_model_path = wavlm_path if use_wavlm else None
+            if use_wavlm and not os.path.exists(wavlm_path):
+                st.sidebar.warning(f"⚠️ WavLM model not found at {wavlm_path}. Using built-in model.")
+                use_wavlm = False
             
             st.session_state.pipeline = VoiceGuardPipeline(
                 output_dir="output",
@@ -432,37 +438,43 @@ def load_pipeline(config_type="default"):
                     "reporting": {
                         "export_formats": ["json", "text"]
                     }
-                }
+                },
+                use_wavlm=use_wavlm,
+                wavlm_model_path=wavlm_model_path
             )
             
-            # Train model with synthetic data if not already trained
-            if not st.session_state.pipeline.detection_agent.is_trained:
-                with st.spinner("🧠 Training detection model with synthetic data (first time only)..."):
-                    import numpy as np
-                    from app.models.model_manager import ModelManager
-                    
-                    # Generate synthetic training data with correct feature vector size
-                    np.random.seed(42)
-                    n_samples = 200
-                    
-                    # Create a sample audio to determine the actual feature vector size
-                    from main import create_demo_audio
-                    sample_audio, _ = create_demo_audio(duration=3.0, frequency=440.0, sr=16000)
-                    sample_features = st.session_state.pipeline.feature_agent.process(sample_audio, normalize=False)
-                    n_features = sample_features["metadata"]["feature_vector_size"]
-                    
-                    print(f"Training model with {n_features} features")
-                    
-                    X = np.random.randn(n_samples, n_features)
-                    y = np.random.randint(0, 2, n_samples)
-                    
-                    # Train the model
-                    training_result = st.session_state.pipeline.detection_agent.train(X, y, test_size=0.2)
-                    
-                    if training_result["success"]:
-                        st.sidebar.success("✅ Model trained successfully!")
-                    else:
-                        st.sidebar.warning("⚠️ Model training failed. Using mock predictions.")
+            # Show WavLM status
+            if use_wavlm:
+                st.sidebar.success("✅ WavLM model loaded!")
+            else:
+                # Train model with synthetic data if not already trained
+                if not st.session_state.pipeline.detection_agent.is_trained:
+                    with st.spinner("🧠 Training detection model with synthetic data (first time only)..."):
+                        import numpy as np
+                        from app.models.model_manager import ModelManager
+                        
+                        # Generate synthetic training data with correct feature vector size
+                        np.random.seed(42)
+                        n_samples = 200
+                        
+                        # Create a sample audio to determine the actual feature vector size
+                        from main import create_demo_audio
+                        sample_audio, _ = create_demo_audio(duration=3.0, frequency=440.0, sr=16000)
+                        sample_features = st.session_state.pipeline.feature_agent.process(sample_audio, normalize=False)
+                        n_features = sample_features["metadata"]["feature_vector_size"]
+                        
+                        print(f"Training model with {n_features} features")
+                        
+                        X = np.random.randn(n_samples, n_features)
+                        y = np.random.randint(0, 2, n_samples)
+                        
+                        # Train the model
+                        training_result = st.session_state.pipeline.detection_agent.train(X, y, test_size=0.2)
+                        
+                        if training_result["success"]:
+                            st.sidebar.success("✅ Model trained successfully!")
+                        else:
+                            st.sidebar.warning("⚠️ Model training failed. Using mock predictions.")
 
 
 def plot_waveform(audio, sr):
@@ -581,21 +593,20 @@ def display_results(result):
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.markdown("### 🎯 Prediction")
         if prediction == "real":
-            st.markdown(f"<h1 style='color: #28a745; text-align: center; font-size: 3rem;'>✅ REAL</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #28a745; font-weight: 600;'>Authentic Audio</p>", unsafe_allow_html=True)
+            st.markdown(f"<h1 style='color: #ffffff; text-align: center; font-size: 3rem;'>✅ REAL</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #ffffff; font-weight: 600;'>Authentic Audio</p>", unsafe_allow_html=True)
         elif prediction == "fake":
-            st.markdown(f"<h1 style='color: #dc3545; text-align: center; font-size: 3rem;'>⚠️ FAKE</h1>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #dc3545; font-weight: 600;'>Synthetic Audio</p>", unsafe_allow_html=True)
+            st.markdown(f"<h1 style='color: #ffffff; text-align: center; font-size: 3rem;'>⚠️ FAKE</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #ffffff; font-weight: 600;'>Synthetic Audio</p>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<h1 style='color: #ffc107; text-align: center; font-size: 3rem;'>❓ UNKNOWN</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h1 style='color: #ffffff; text-align: center; font-size: 3rem;'>❓ UNKNOWN</h1>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.markdown("### 📊 Confidence")
-        confidence_color = "#28a745" if confidence > 0.8 else "#ffc107" if confidence > 0.6 else "#dc3545"
-        st.markdown(f"<h1 style='color: {confidence_color}; text-align: center; font-size: 3rem;'>{confidence*100:.1f}%</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #667eea; font-weight: 600;'>Model Certainty</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: #ffffff; text-align: center; font-size: 3rem;'>{confidence*100:.1f}%</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #ffffff; font-weight: 600;'>Model Certainty</p>", unsafe_allow_html=True)
         
         # Confidence bar
         st.progress(confidence)
@@ -610,15 +621,8 @@ def display_results(result):
             "high": "🟠",
             "critical": "🔴"
         }.get(risk_level, "⚪")
-        risk_color = {
-            "low": "#28a745",
-            "medium": "#ffc107",
-            "high": "#fd7e14",
-            "critical": "#dc3545"
-        }.get(risk_level, "#6c757d")
-        
-        st.markdown(f"<h1 style='color: {risk_color}; text-align: center; font-size: 2.5rem;'>{risk_emoji} {risk_level.upper()}</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #667eea; font-weight: 600;'>Threat Assessment</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: #ffffff; text-align: center; font-size: 2.5rem;'>{risk_emoji} {risk_level.upper()}</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #ffffff; font-weight: 600;'>Threat Assessment</p>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
     st.divider()
@@ -658,11 +662,11 @@ def display_results(result):
                         feature_value = feature.get('value', 0.0)
                         feature_expected = feature.get('expected_range', 'N/A')
                         st.markdown(f"""
-                        <div style='background: rgba(255,255,255,0.95); padding: 1rem; border-radius: 0.5rem; border-left: 4px solid {severity_color}; margin: 0.5rem 0;'>
-                            <strong style='color: #000000; font-weight: 700;'>{feature_name}</strong><br/>
-                            <small style='color: #000000; font-weight: 600;'>Value: {feature_value:.4f}</small><br/>
-                            <small style='color: #000000; font-weight: 600;'>Expected: {feature_expected}</small><br/>
-                            <span style='color: {severity_color}; font-weight: 800; font-size: 0.9rem;'>{severity.upper()}</span>
+                        <div style='background: rgba(30, 30, 30, 0.95); padding: 1rem; border-radius: 0.5rem; border-left: 4px solid {severity_color}; margin: 0.5rem 0;'>
+                            <strong style='color: #ffffff; font-weight: 700;'>{feature_name}</strong><br/>
+                            <small style='color: #ffffff; font-weight: 600;'>Value: {feature_value:.4f}</small><br/>
+                            <small style='color: #ffffff; font-weight: 600;'>Expected: {feature_expected}</small><br/>
+                            <span style='color: #ffffff; font-weight: 800; font-size: 0.9rem;'>{severity.upper()}</span>
                         </div>
                         """, unsafe_allow_html=True)
         
@@ -715,6 +719,30 @@ def sidebar_configuration():
         )
         
         st.markdown("---")
+        st.markdown("### 🧠 Advanced Model")
+        use_wavlm = st.checkbox(
+            "Use WavLM Model (Real Pre-trained)",
+            value=False,
+            help="Use Microsoft's WavLM model (~99% accuracy). Requires downloading the model first."
+        )
+        
+        if use_wavlm:
+            wavlm_path = st.text_input(
+                "WavLM Model Path",
+                value="models/pretrained/wavlm_base_plus",
+                help="Path to the downloaded WavLM model"
+            )
+            
+            # Check if model exists
+            if not os.path.exists(wavlm_path):
+                st.warning(f"⚠️ Model not found at: {wavlm_path}")
+                st.info("💡 Download the model using: `python download_real_model.py`")
+            else:
+                st.success(f"✅ WavLM model found!")
+        else:
+            wavlm_path = "models/pretrained/wavlm_base_plus"
+        
+        st.markdown("---")
         st.markdown("### ℹ️ About")
         st.markdown("""
         <div style='background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 0.5rem; color: white;'>
@@ -734,7 +762,9 @@ def sidebar_configuration():
             },
             "detection": {
                 "model_type": model_type
-            }
+            },
+            "use_wavlm": use_wavlm,
+            "wavlm_path": wavlm_path if use_wavlm else None
         }
 
 
@@ -746,11 +776,96 @@ def main():
     st.markdown('<p class="main-header">🛡️ VoiceGuard AI</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">✨ Deepfake Audio Detection System ✨</p>', unsafe_allow_html=True)
     
-    # Welcome message
+    # Welcome message with multiagent system info
     st.markdown("""
     <div class="welcome-message">
         <h2>👋 Welcome to VoiceGuard AI!</h2>
-        <p>Protect yourself from AI-generated audio fraud with our advanced deepfake detection technology.</p>
+        <p>🛡️ Multi-Agent Deepfake Audio Detection System</p>
+        <p style="font-size: 1rem; margin-top: 1rem;">Protect yourself from AI-generated audio fraud with our advanced multi-agent AI technology.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Multi-Agent System Architecture
+    st.markdown("## 🤖 Multi-Agent System Architecture")
+    st.markdown("VoiceGuard AI uses **5 specialized AI agents** working together:")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 1.5rem; border-radius: 1rem; text-align: center; 
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);'>
+            <h1 style='font-size: 3rem; margin: 0;'>📥</h1>
+            <h3 style='color: white; font-weight: 800; margin-top: 0.5rem;'>Input Agent</h3>
+            <p style='color: white; font-size: 0.85rem; font-weight: 600;'>
+                Validates & preprocesses audio
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                    padding: 1.5rem; border-radius: 1rem; text-align: center; 
+                    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);'>
+            <h1 style='font-size: 3rem; margin: 0;'>🔍</h1>
+            <h3 style='color: white; font-weight: 800; margin-top: 0.5rem;'>Feature Agent</h3>
+            <p style='color: white; font-size: 0.85rem; font-weight: 600;'>
+                Extracts audio features (MFCC, spectral, etc.)
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                    padding: 1.5rem; border-radius: 1rem; text-align: center; 
+                    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);'>
+            <h1 style='font-size: 3rem; margin: 0;'>🧠</h1>
+            <h3 style='color: white; font-weight: 800; margin-top: 0.5rem;'>Detection Agent</h3>
+            <p style='color: white; font-size: 0.85rem; font-weight: 600;'>
+                Classifies real vs fake using ML models
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+                    padding: 1.5rem; border-radius: 1rem; text-align: center; 
+                    box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4);'>
+            <h1 style='font-size: 3rem; margin: 0;'>💡</h1>
+            <h3 style='color: white; font-weight: 800; margin-top: 0.5rem;'>Explain Agent</h3>
+            <p style='color: white; font-size: 0.85rem; font-weight: 600;'>
+                Generates human-readable explanations
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+                    padding: 1.5rem; border-radius: 1rem; text-align: center; 
+                    box-shadow: 0 4px 15px rgba(250, 112, 154, 0.4);'>
+            <h1 style='font-size: 3rem; margin: 0;'>📄</h1>
+            <h3 style='color: white; font-weight: 800; margin-top: 0.5rem;'>Report Agent</h3>
+            <p style='color: white; font-size: 0.85rem; font-weight: 600;'>
+                Creates comprehensive reports
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("")
+    
+    # Pipeline flow
+    st.markdown("""
+    <div style='background: rgba(30, 30, 30, 0.95); padding: 1.5rem; border-radius: 1rem; 
+                border-left: 5px solid #3b82f6; margin: 1rem 0;'>
+        <h3 style='color: white; font-weight: 800; margin-bottom: 1rem;'>🔄 Pipeline Flow</h3>
+        <p style='color: white; font-size: 1.1rem; font-weight: 600; text-align: center;'>
+            📥 Audio Input → 🔍 Feature Extraction → 🧠 Deepfake Detection → 💡 Explanation → 📄 Report Generation
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -798,27 +913,27 @@ def main():
                 with col1:
                     st.markdown(f"""
                     <div class="metric-card" style="text-align: center;">
-                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">⏱️ Duration</h3>
-                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">{Helper.format_duration(duration)}</p>
+                        <h3 style="color: #ffffff; font-weight: 700; margin-bottom: 0.5rem;">⏱️ Duration</h3>
+                        <p style="color: #ffffff; font-weight: 800; font-size: 1.5rem; margin: 0;">{Helper.format_duration(duration)}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     st.markdown(f"""
                     <div class="metric-card" style="text-align: center;">
-                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">🔊 Sample Rate</h3>
-                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">{sr} Hz</p>
+                        <h3 style="color: #ffffff; font-weight: 700; margin-bottom: 0.5rem;">🔊 Sample Rate</h3>
+                        <p style="color: #ffffff; font-weight: 800; font-size: 1.5rem; margin: 0;">{sr} Hz</p>
                     </div>
                     """, unsafe_allow_html=True)
                 with col2:
                     st.markdown(f"""
                     <div class="metric-card" style="text-align: center;">
-                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">📊 Samples</h3>
-                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">{len(audio):,}</p>
+                        <h3 style="color: #ffffff; font-weight: 700; margin-bottom: 0.5rem;">📊 Samples</h3>
+                        <p style="color: #ffffff; font-weight: 800; font-size: 1.5rem; margin: 0;">{len(audio):,}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     st.markdown(f"""
                     <div class="metric-card" style="text-align: center;">
-                        <h3 style="color: #000000; font-weight: 700; margin-bottom: 0.5rem;">🎧 Channels</h3>
-                        <p style="color: #000000; font-weight: 800; font-size: 1.5rem; margin: 0;">1 (Mono)</p>
+                        <h3 style="color: #ffffff; font-weight: 700; margin-bottom: 0.5rem;">🎧 Channels</h3>
+                        <p style="color: #ffffff; font-weight: 800; font-size: 1.5rem; margin: 0;">1 (Mono)</p>
                     </div>
                     """, unsafe_allow_html=True)
                 
@@ -838,7 +953,11 @@ def main():
                 """, unsafe_allow_html=True)
                 
                 if st.button("🔍 Analyze Audio", type="primary", use_container_width=True):
-                    load_pipeline(config["config_type"])
+                    load_pipeline(
+                        config["config_type"], 
+                        use_wavlm=config.get("use_wavlm", False),
+                        wavlm_path=config.get("wavlm_path", "models/pretrained/wavlm_base_plus")
+                    )
                     
                     with st.spinner("🧠 Analyzing audio with AI..."):
                         result = st.session_state.pipeline.analyze_audio_file(
@@ -875,7 +994,11 @@ def main():
         st.markdown("")
         
         if st.button("🎵 Generate and Analyze Demo Audio", type="primary", use_container_width=True):
-            load_pipeline(config["config_type"])
+            load_pipeline(
+                config["config_type"],
+                use_wavlm=config.get("use_wavlm", False),
+                wavlm_path=config.get("wavlm_path", "models/pretrained/wavlm_base_plus")
+            )
             
             with st.spinner("🎨 Generating demo audio..."):
                 demo_audio, demo_sr = create_demo_audio(
@@ -923,7 +1046,11 @@ def main():
             st.markdown("")
             
             if st.button("🔍 Analyze All Files", type="primary", use_container_width=True):
-                load_pipeline(config["config_type"])
+                load_pipeline(
+                    config["config_type"],
+                    use_wavlm=config.get("use_wavlm", False),
+                    wavlm_path=config.get("wavlm_path", "models/pretrained/wavlm_base_plus")
+                )
                 
                 audio_files = []
                 for uploaded_file in uploaded_files:

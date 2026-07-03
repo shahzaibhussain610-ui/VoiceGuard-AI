@@ -1,6 +1,7 @@
 """
 Detection Agent - Performs deepfake detection analysis in VoiceGuard AI
 Responsible for classifying audio as real or fake using extracted features
+Supports both custom-trained and pre-trained models
 """
 
 import numpy as np
@@ -13,9 +14,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 import joblib
 import warnings
+import sys
+import os
 
 # Suppress sklearn warnings for cleaner output
 warnings.filterwarnings('ignore', category=UserWarning)
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.models.pretrained_manager import PreTrainedModelManager
 
 
 class DetectionAgent:
@@ -30,21 +37,31 @@ class DetectionAgent:
     - Supports both pre-trained and custom model training
     """
     
-    def __init__(self, model_type: str = 'ensemble'):
+    def __init__(self, model_type: str = 'ensemble', use_pretrained: bool = False, 
+                 pretrained_model_id: str = "audio_deepfake_v1"):
         """
         Initialize the Detection Agent.
         
         Args:
             model_type: Type of model to use ('random_forest', 'svm', 'gradient_boosting', 'ensemble')
+            use_pretrained: Whether to use pre-trained models instead of training
+            pretrained_model_id: ID of pre-trained model to use (if use_pretrained=True)
         """
         self.model_type = model_type
+        self.use_pretrained = use_pretrained
+        self.pretrained_model_id = pretrained_model_id
         self.models = {}
         self.scaler = StandardScaler()
         self.is_trained = False
         self.feature_importance = None
+        self.pretrained_manager = None
         
         # Initialize models based on type
-        self._initialize_models()
+        if not use_pretrained:
+            self._initialize_models()
+        else:
+            # Initialize pre-trained model manager
+            self._initialize_pretrained()
         
     def _initialize_models(self):
         """
@@ -119,6 +136,43 @@ class DetectionAgent:
         else:
             raise ValueError(f"Unsupported model type: {self.model_type}")
     
+    def _initialize_pretrained(self):
+        """
+        Initialize pre-trained model manager and load model.
+        
+        This method sets up the pre-trained model for inference without training.
+        """
+        try:
+            # Initialize pre-trained model manager
+            self.pretrained_manager = PreTrainedModelManager()
+            
+            # Try to load the specified pre-trained model
+            load_result = self.pretrained_manager.load_pretrained_model(self.pretrained_model_id)
+            
+            if load_result["success"]:
+                self.is_trained = True
+                print(f"[OK] Pre-trained model loaded: {load_result['metadata']['name']}")
+                print(f"  Accuracy: {load_result['metadata']['accuracy']:.2%}")
+                print(f"  Trained on: {load_result['metadata']['trained_on']}")
+            else:
+                # Try to auto-load best available model
+                print(f"[WARN] Failed to load {self.pretrained_model_id}: {load_result['error']}")
+                print("  Attempting to load best available pre-trained model...")
+                
+                auto_load_result = self.pretrained_manager.auto_load_best_model()
+                if auto_load_result["success"]:
+                    self.is_trained = True
+                    print(f"[OK] Auto-loaded pre-trained model: {auto_load_result['metadata']['name']}")
+                else:
+                    print(f"[FAIL] Failed to load any pre-trained model: {auto_load_result['error']}")
+                    print("  Falling back to untrained model (training required)")
+                    
+        except Exception as e:
+            print(f"[FAIL] Error initializing pre-trained model: {e}")
+            print("  Falling back to untrained model (training required)")
+            self.use_pretrained = False
+            self._initialize_models()
+    
     def prepare_feature_vector(self, features: Dict[str, Any]) -> np.ndarray:
         """
         Convert feature dictionary to a flat feature vector for ML models.
@@ -134,30 +188,45 @@ class DetectionAgent:
         """
         feature_list = []
         
-        def extract_values(d, parent_key=''):
+        def extract_values(d, key_name=''):
             """
             Recursively extract numeric values from nested dictionary.
             
             Args:
                 d: Dictionary or list to extract values from
-                parent_key: Parent key for context
+                key_name: Current key name for filtering raw matrices
             """
+            # Skip raw feature matrices
+            if key_name.endswith('_features') or key_name.endswith('_matrix'):
+                return
+            
             if isinstance(d, dict):
                 # Sort keys for consistent feature ordering
                 for key in sorted(d.keys()):
+                    # Skip metadata and raw feature matrices
                     if key == "metadata":
-                        continue  # Skip metadata, not a feature
-                    # Skip raw feature matrices (keep only statistics)
-                    if key.endswith("_features") or key.endswith("_matrix"):
+                        continue
+                    if key.endswith('_features') or key.endswith('_matrix'):
                         continue
                     extract_values(d[key], key)
             elif isinstance(d, list):
-                # Only include lists that are not too long (avoid raw matrices)
-                if len(d) <= 100:  # Threshold for statistical summaries
-                    feature_list.extend(d)
-            elif isinstance(d, (int, float)):
+                # Check if this is a list of numbers or nested structures
+                if len(d) > 0 and isinstance(d[0], (int, float, np.integer, np.floating)):
+                    # List of numbers - include it
+                    feature_list.extend([float(x) for x in d])
+                elif len(d) > 0 and isinstance(d[0], (list, dict)):
+                    # List of lists/dicts - recurse into each item
+                    # Only recurse if parent key is not a raw feature matrix
+                    if not key_name.endswith('_features') and not key_name.endswith('_matrix'):
+                        for item in d:
+                            extract_values(item, key_name)
+                # else: empty list or unknown type - skip
+            elif isinstance(d, (int, float, np.integer, np.floating)):
                 # Append scalar values
-                feature_list.append(d)
+                feature_list.append(float(d))
+            elif isinstance(d, np.ndarray):
+                # Handle numpy arrays - flatten and add
+                feature_list.extend(d.flatten().tolist())
         
         extract_values(features)
         
@@ -304,6 +373,7 @@ class DetectionAgent:
         
         Main prediction method that processes features and returns
         classification results with confidence scores.
+        Supports both custom-trained and pre-trained models.
         
         Args:
             features: Dictionary of extracted features from Feature Agent
@@ -321,10 +391,35 @@ class DetectionAgent:
         }
         
         try:
-            # Check if model is trained
+            # Check if model is trained or pre-trained model is loaded
             if not self.is_trained:
-                raise RuntimeError("Model has not been trained. Call train() first.")
+                raise RuntimeError("Model has not been trained. Call train() first or use pre-trained models.")
             
+            # Use pre-trained model if enabled
+            if self.use_pretrained and self.pretrained_manager:
+                # Prepare feature vector
+                feature_vector = self.prepare_feature_vector(features)
+                
+                # Use pre-trained model for prediction
+                pretrained_result = self.pretrained_manager.predict(feature_vector)
+                
+                if pretrained_result["success"]:
+                    result["success"] = True
+                    result["prediction"] = pretrained_result["prediction"]
+                    result["confidence"] = pretrained_result["confidence"]
+                    result["probabilities"] = pretrained_result["probabilities"]
+                    result["model_predictions"] = {
+                        "pretrained": 1 if pretrained_result["prediction"] == "fake" else 0
+                    }
+                    result["model_type"] = "pre-trained"
+                    result["model_id"] = pretrained_result.get("model_id", self.pretrained_model_id)
+                    result["model_metadata"] = pretrained_result.get("model_metadata", {})
+                else:
+                    result["error"] = f"Pre-trained model prediction failed: {pretrained_result['error']}"
+                
+                return result
+            
+            # Use custom-trained model
             # Prepare feature vector
             feature_vector = self.prepare_feature_vector(features)
             
@@ -388,6 +483,7 @@ class DetectionAgent:
                 "fake": fake_prob
             }
             result["model_predictions"] = model_preds
+            result["model_type"] = self.model_type
             
         except Exception as e:
             result["error"] = str(e)
@@ -501,12 +597,19 @@ class DetectionAgent:
         Returns:
             Dictionary containing model information
         """
-        return {
+        info = {
             "model_type": self.model_type,
+            "use_pretrained": self.use_pretrained,
             "is_trained": self.is_trained,
-            "models_available": list(self.models.keys()),
             "has_feature_importance": self.feature_importance is not None
         }
+        
+        if self.use_pretrained and self.pretrained_manager:
+            info["pretrained_info"] = self.pretrained_manager.get_model_info()
+        else:
+            info["models_available"] = list(self.models.keys())
+        
+        return info
 
 
 # Example usage
@@ -514,53 +617,21 @@ if __name__ == "__main__":
     print("Detection Agent - Example Usage")
     print("=" * 60)
     
-    # Initialize the agent
-    detection_agent = DetectionAgent(model_type='ensemble')
+    # Example 1: Using pre-trained model (no training required)
+    print("\n" + "-" * 60)
+    print("Example 1: Using Pre-trained Model (No Training Required)")
+    print("-" * 60)
+    
+    # Initialize with pre-trained model
+    detection_agent_pretrained = DetectionAgent(
+        model_type='ensemble',
+        use_pretrained=True,
+        pretrained_model_id="audio_deepfake_v1"
+    )
     
     print(f"\nModel Configuration:")
-    print(f"  Model Type: {detection_agent.model_type}")
-    print(f"  Models: {', '.join(detection_agent.models.keys())}")
-    
-    # Example: Create synthetic training data
-    print("\n" + "-" * 60)
-    print("Example: Training with synthetic data")
-    print("-" * 60)
-    
-    # Generate synthetic features (in real scenario, these come from Feature Agent)
-    np.random.seed(42)
-    n_samples = 200
-    n_features = 50
-    
-    # Create synthetic feature vectors
-    X = np.random.randn(n_samples, n_features)
-    
-    # Create synthetic labels (0 = real, 1 = fake)
-    y = np.random.randint(0, 2, n_samples)
-    
-    print(f"\nTraining Data:")
-    print(f"  Number of samples: {n_samples}")
-    print(f"  Number of features: {n_features}")
-    print(f"  Real samples: {np.sum(y == 0)}")
-    print(f"  Fake samples: {np.sum(y == 1)}")
-    
-    # Train the model
-    print(f"\nTraining models...")
-    training_results = detection_agent.train(X, y, test_size=0.2)
-    
-    if training_results["success"]:
-        print(f"\n✓ Training successful!")
-        print(f"\nModel Performance:")
-        for model_name, scores in training_results["model_scores"].items():
-            print(f"\n  {model_name.upper()}:")
-            print(f"    Accuracy:  {scores['accuracy']:.4f}")
-            print(f"    Precision: {scores['precision']:.4f}")
-            print(f"    Recall:    {scores['recall']:.4f}")
-            print(f"    F1 Score:  {scores['f1_score']:.4f}")
-    
-    # Example: Make predictions
-    print("\n" + "-" * 60)
-    print("Example: Making predictions")
-    print("-" * 60)
+    print(f"  Use Pre-trained: {detection_agent_pretrained.use_pretrained}")
+    print(f"  Is Trained/Loaded: {detection_agent_pretrained.is_trained}")
     
     # Create synthetic test features
     test_features = {
@@ -593,8 +664,8 @@ if __name__ == "__main__":
         }
     }
     
-    # Make prediction
-    prediction_result = detection_agent.predict(test_features)
+    # Make prediction with pre-trained model
+    prediction_result = detection_agent_pretrained.predict(test_features)
     
     if prediction_result["success"]:
         print(f"\n✓ Prediction successful!")
@@ -603,15 +674,69 @@ if __name__ == "__main__":
         print(f"  Probabilities:")
         print(f"    Real: {prediction_result['probabilities']['real']:.4f}")
         print(f"    Fake: {prediction_result['probabilities']['fake']:.4f}")
-        print(f"  Individual Model Predictions:")
-        for model, pred in prediction_result["model_predictions"].items():
-            print(f"    {model}: {'FAKE' if pred == 1 else 'REAL'}")
+        print(f"  Model Type: {prediction_result.get('model_type', 'N/A')}")
+    
+    # Example 2: Training custom model
+    print("\n" + "=" * 60)
+    print("Example 2: Training Custom Model")
+    print("=" * 60)
+    
+    # Initialize the agent with custom training
+    detection_agent_custom = DetectionAgent(model_type='ensemble', use_pretrained=False)
+    
+    print(f"\nModel Configuration:")
+    print(f"  Model Type: {detection_agent_custom.model_type}")
+    print(f"  Models: {', '.join(detection_agent_custom.models.keys())}")
+    
+    # Example: Create synthetic training data
+    print("\n" + "-" * 60)
+    print("Training with synthetic data")
+    print("-" * 60)
+    
+    # Generate synthetic features (in real scenario, these come from Feature Agent)
+    np.random.seed(42)
+    n_samples = 200
+    n_features = 50
+    
+    # Create synthetic feature vectors
+    X = np.random.randn(n_samples, n_features)
+    
+    # Create synthetic labels (0 = real, 1 = fake)
+    y = np.random.randint(0, 2, n_samples)
+    
+    print(f"\nTraining Data:")
+    print(f"  Number of samples: {n_samples}")
+    print(f"  Number of features: {n_features}")
+    print(f"  Real samples: {np.sum(y == 0)}")
+    print(f"  Fake samples: {np.sum(y == 1)}")
+    
+    # Train the model
+    print(f"\nTraining models...")
+    training_results = detection_agent_custom.train(X, y, test_size=0.2)
+    
+    if training_results["success"]:
+        print(f"\n✓ Training successful!")
+        print(f"\nModel Performance:")
+        for model_name, scores in training_results["model_scores"].items():
+            print(f"\n  {model_name.upper()}:")
+            print(f"    Accuracy:  {scores['accuracy']:.4f}")
+            print(f"    Precision: {scores['precision']:.4f}")
+            print(f"    Recall:    {scores['recall']:.4f}")
+            print(f"    F1 Score:  {scores['f1_score']:.4f}")
+    
+    # Make prediction with custom model
+    prediction_result_custom = detection_agent_custom.predict(test_features)
+    
+    if prediction_result_custom["success"]:
+        print(f"\n✓ Prediction successful!")
+        print(f"  Prediction: {prediction_result_custom['prediction'].upper()}")
+        print(f"  Confidence: {prediction_result_custom['confidence']:.4f}")
     
     # Get model info
     print("\n" + "-" * 60)
     print("Model Information:")
     print("-" * 60)
-    model_info = detection_agent.get_model_info()
+    model_info = detection_agent_custom.get_model_info()
     for key, value in model_info.items():
         print(f"  {key}: {value}")
     

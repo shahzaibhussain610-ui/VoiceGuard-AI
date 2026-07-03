@@ -702,21 +702,22 @@ class ReportAgent:
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #000000;
         }}
         .header {{
             background-color: #2c3e50;
-            color: white;
+            color: #ffffff;
             padding: 20px;
             border-radius: 5px;
             margin-bottom: 20px;
         }}
         .section {{
-            background-color: white;
+            background-color: #1a1a1a;
             padding: 20px;
             margin-bottom: 20px;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            color: #ffffff;
         }}
         .verdict {{
             font-size: 24px;
@@ -728,11 +729,11 @@ class ReportAgent:
         }}
         .verdict.fake {{
             background-color: #e74c3c;
-            color: white;
+            color: #ffffff;
         }}
         .verdict.real {{
             background-color: #27ae60;
-            color: white;
+            color: #ffffff;
         }}
         .risk-critical {{
             background-color: #c0392b;
@@ -753,8 +754,9 @@ class ReportAgent:
         .feature-item {{
             padding: 10px;
             margin: 5px 0;
-            background-color: #ecf0f1;
+            background-color: #2a2a2a;
             border-left: 4px solid #3498db;
+            color: #ffffff;
         }}
         .suspicious {{
             border-left-color: #e74c3c;
@@ -763,15 +765,17 @@ class ReportAgent:
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
+            color: #ffffff;
         }}
         th, td {{
             padding: 10px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #444444;
+            color: #ffffff;
         }}
         th {{
             background-color: #3498db;
-            color: white;
+            color: #ffffff;
         }}
     </style>
 </head>

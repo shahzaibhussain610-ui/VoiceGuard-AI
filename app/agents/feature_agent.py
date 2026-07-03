@@ -617,21 +617,47 @@ class FeatureAgent:
         """
         feature_list = []
         
-        def extract_values(d):
+        def extract_values(d, key_name=''):
             """Recursively extract numeric values from nested dict."""
+            # Skip raw feature matrices
+            if key_name.endswith('_features') or key_name.endswith('_matrix'):
+                return
+            
             if isinstance(d, dict):
                 for key in sorted(d.keys()):  # Sort for consistency
                     if key == "metadata":
                         continue
-                    extract_values(d[key])
+                    if key.endswith('_features') or key.endswith('_matrix'):
+                        continue
+                    extract_values(d[key], key)
             elif isinstance(d, list):
-                feature_list.extend(d)
-            elif isinstance(d, (int, float)):
-                feature_list.append(d)
+                # Check if list contains numeric values or nested structures
+                if d and isinstance(d[0], (int, float)):
+                    # List of numbers - extend directly
+                    feature_list.extend([float(x) for x in d])
+                elif d and isinstance(d[0], (list, dict)):
+                    # List of lists/dicts - recurse
+                    # Only recurse if parent key is not a raw feature matrix
+                    if not key_name.endswith('_features') and not key_name.endswith('_matrix'):
+                        for item in d:
+                            extract_values(item, key_name)
+                else:
+                    # Empty list or unknown - skip
+                    pass
+            elif isinstance(d, (int, float, np.integer, np.floating)):
+                # Handle numpy types as well
+                feature_list.append(float(d))
+            elif isinstance(d, np.ndarray):
+                # Handle numpy arrays
+                if d.ndim == 1:
+                    feature_list.extend(d.tolist())
+                else:
+                    # Multi-dimensional - flatten
+                    feature_list.extend(d.flatten().tolist())
         
         extract_values(features)
         
-        return np.array(feature_list)
+        return np.array(feature_list, dtype=np.float64)
     
     def get_feature_summary(self, features: Dict[str, Any]) -> Dict[str, Any]:
         """
